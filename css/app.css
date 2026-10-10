@@ -31,3 +31,47 @@ input, select, textarea { font:inherit; padding:8px; border:1px solid #cfc9bb; b
   th, td { padding:6px 7px; font-size:13px; } button { min-height:38px; } button.chico { min-height:30px; }
 }
 @media print { #lateral, #navbaja, .barra-m, .barra-acc, .filtros { display:none !important; } main { padding:0; } }
+nav#menu .grupo-menu { color:#6f8a83; font-size:10.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; padding:14px 20px 4px; }
+.total-cot { font-weight:800; font-size:15px; margin:8px 0 0; text-align:right; } .sub-linea { align-self:center; white-space:nowrap; }
+
+/* ===== Mejora visual V19 final (solo estilos: no cambia ninguna pantalla ni acción) ===== */
+:root { --sombra:0 1px 2px rgba(10,15,14,.06),0 4px 14px rgba(10,15,14,.06); --sombra-fuerte:0 8px 28px rgba(10,15,14,.18); }
+body { -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums; }
+h2 { font-size:22px; letter-spacing:-.01em; } h3 { font-size:16px; }
+main { padding:22px 22px 30px; }
+.tarjeta { box-shadow:var(--sombra); border-radius:14px; padding:18px; }
+button { transition:background .12s,border-color .12s,box-shadow .12s,transform .06s; font-weight:600; }
+button:hover:not(:disabled) { border-color:var(--oil); box-shadow:0 1px 6px rgba(201,134,44,.25); }
+button:active:not(:disabled) { transform:translateY(1px); }
+button:disabled { opacity:.55; cursor:not-allowed; }
+button.primario { box-shadow:0 2px 8px rgba(201,134,44,.35); } button.primario:hover:not(:disabled) { background:var(--oil-deep); }
+:focus-visible { outline:2px solid var(--jade-deep); outline-offset:2px; }
+input:focus, select:focus, textarea:focus { outline:none; border-color:var(--oil); box-shadow:0 0 0 3px rgba(201,134,44,.2); }
+.tarjetas { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px; }
+.dato { border-radius:14px; box-shadow:var(--sombra); padding:14px 16px; border-left:4px solid var(--oil); text-align:left; transition:transform .12s,box-shadow .12s; }
+.dato small { letter-spacing:.03em; font-size:12px; font-weight:700; color:var(--text-dim); }
+.dato strong { display:block; font-size:24px; line-height:1.2; margin:3px 0; letter-spacing:-.01em; }
+.dato.alerta { border-left-color:var(--warn); background:#fff8f5; } .dato.bien { border-left-color:var(--ok); }
+button.enlace-kpi:hover { transform:translateY(-2px); box-shadow:var(--sombra-fuerte); }
+.acceso-rapido button { padding:10px 16px; border-radius:10px; }
+.tabla { border-radius:14px; box-shadow:var(--sombra); max-height:68vh; overflow:auto; }
+.tabla table thead th { position:sticky; top:0; z-index:2; background:#f1eee6; font-size:12px; letter-spacing:.02em; color:var(--steel); border-bottom:2px solid var(--line); }
+.tabla table tbody tr:nth-child(even) { background:#fbfaf6; } .tabla table tbody tr:hover { background:#fff3e0; }
+td.num, th.num { text-align:right; }
+.chip { font-weight:700; padding:2px 10px; }
+nav#menu button { transition:background .12s,color .12s; border-radius:0 8px 8px 0; margin-right:10px; }
+nav#menu button:hover { background:rgba(255,255,255,.06); color:#fff; }
+nav#menu button.act { background:rgba(0,217,163,.12); color:var(--jade); border-left-color:var(--jade); }
+.modal-caja { border-radius:16px; box-shadow:var(--sombra-fuerte); }
+.modal-fondo { backdrop-filter:blur(2px); }
+.aviso { border-radius:10px; box-shadow:var(--sombra); }
+.login-pantalla .tarjeta { max-width:380px; width:100%; padding:26px; box-shadow:var(--sombra-fuerte); border-top:4px solid var(--oil); }
+.cargando, .suave { color:var(--text-dim); }
+@keyframes pulso { 0%,100% { opacity:.55 } 50% { opacity:1 } } .cargando { animation:pulso 1.2s ease-in-out infinite; }
+@media (max-width:900px) {
+  main { padding:12px 10px 84px; } h2 { font-size:19px; }
+  .tarjetas { grid-template-columns:repeat(2,1fr); gap:8px; } .dato { padding:10px 12px; } .dato strong { font-size:19px; }
+  button { min-height:44px; } button.chico { min-height:34px; } input, select, textarea { min-height:44px; font-size:16px; }
+  .tabla { max-height:none; } .acceso-rapido button { flex:1 1 45%; }
+}
+@media (prefers-reduced-motion:reduce) { * { animation:none !important; transition:none !important; } }
