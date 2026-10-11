@@ -7,6 +7,7 @@
     var el = document.createElement(tag); attrs = attrs || {};
     Object.keys(attrs).forEach(function (k) { var v = attrs[k]; if (v == null || v === false) return;
       if (k === 'class') el.className = v; else if (k.slice(0, 2) === 'on') el.addEventListener(k.slice(2), v); else if (k === 'value') el.value = v; else if (k === 'checked') el.checked = !!v; else el.setAttribute(k, v === true ? '' : v); });
+    if (tag === 'button' && el.firstChild && el.firstChild.nodeType === 3) el.firstChild.nodeValue = el.firstChild.nodeValue.replace(/^(➕|🛒|📝|📦) ?/, function (m) { return m.charAt(0) === '➕' ? '+ ' : ''; });   // V18_4 usa "+ Nuevo…" sin íconos de emoji
     if (tag === 'button') {   // todos los botones toman el aspecto de V18_4: .btn-primary para los principales, .btn-sm para el resto
       var c = el.className || '';
       if (/(^| )primario( |$)/.test(c) && !/btn-primary/.test(c)) el.className = (c + ' btn-primary').trim();

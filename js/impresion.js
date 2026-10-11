@@ -2,7 +2,10 @@
  * Solo muestra datos del cliente: nunca costos ni capas de inventario (regla 2.18 de FIFO). */
 var Impresion = (function () {
   'use strict';
+  /* Nombre de archivo a prueba de codificación: si este archivo se leyó mal (UTF-8 leído como Latin-1: "CotizaciÃ³n"), se repara; y los nombres se escriben con \u para no depender de la codificación del servidor. */
+  function nombreSeguro(n) { n = String(n); try { if (/[\u00c2\u00c3][\u0080-\u00bf]/.test(n)) return decodeURIComponent(escape(n)); } catch (e) { /* ya estaba bien */ } return n; }
   async function compartirArchivo(blob, filename, mensaje, mime) {
+    filename = nombreSeguro(filename);
     try {
       const file = new File([blob], filename, { type: mime });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -166,7 +169,7 @@ var Impresion = (function () {
     try { doc.addImage('data:image/png;base64,' + FOOTER_IMG_B64, 'PNG', margin, fy, footerImgW, footerImgH); } catch (e) {}
   
     const numLimpio = String(numero).replace(/[^0-9]/g, '').padStart(4, '0');
-    return { blob: doc.output('blob'), filename: `Cotización_N. ${numLimpio}.pdf`, doc: doc };
+    return { blob: doc.output('blob'), filename: `Cotizaci\u00f3n_N. ${numLimpio}.pdf`, doc: doc };
   }
   function fechaCorta_(fecha){
     const d = new Date(fecha);

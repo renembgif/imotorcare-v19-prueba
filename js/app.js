@@ -1,7 +1,7 @@
 /* Web V19 — armazón: inicio de sesión, menú por rol y enrutador. Diseño visual de V18_4 (menú, login, barra inferior). */
 (function (root) {
   'use strict';
-  var h = U.h, App = { pantallas: [], actual: null }, $ = function (s) { return document.querySelector(s); };
+  var h = U.h, App = { pantallas: [], actual: null, build: '20261011a' }, $ = function (s) { return document.querySelector(s); };
   App.pantalla = function (p) { App.pantallas.push(p); };
   App.rol = function () { var u = API.usuario(); return u ? (u.rol === 'Administrador' ? 'A' : 'O') : ''; };
   App.aviso = function (msg, tipo) { var a = $('#aviso'); a.hidden = !msg; a.className = 'aviso ' + (tipo || ''); a.textContent = msg || ''; };
@@ -12,7 +12,7 @@
   function cerrarLogin() { $('#login-screen').hidden = true; document.documentElement.classList.remove('login-abierto'); var av = $('#aviso'); if (av.parentNode !== $('#principal')) $('#principal').insertBefore(av, $('#vista')); }
   App.mensajeCentral = function (titulo, nodos) { login([h('h1', {}, titulo)].concat(nodos || [])); };
   function pantallaLogin(msg) {
-    $('#salir').hidden = true; $('#quien').textContent = ''; $('#user-av').textContent = ''; $('#menu').hidden = true; $('#navbaja').hidden = true; $('#mas-menu').classList.remove('show'); document.body.classList.remove('menu-abierto'); $('#titulo-m').textContent = 'iMotor Care';
+    if (window.Cabecera) Cabecera.mostrar(); $('#salir').hidden = true; $('#quien').textContent = ''; $('#user-av').textContent = ''; $('#menu').hidden = true; $('#navbaja').hidden = true; $('#mas-menu').classList.remove('show'); document.body.classList.remove('menu-abierto'); $('#titulo-m').textContent = 'iMotor Care';
     U.vacio($('#vista'));
     var u = h('input', { id: 'lu', autocomplete: 'username', 'data-n': 'usuario', placeholder: 'Tu usuario' }), c = h('input', { id: 'lc', type: 'password', autocomplete: 'current-password', 'data-n': 'clave', placeholder: '••••••••' });
     var entrar = function () { var b = $('#lb'); b.disabled = true; API.login(u.value, c.value).then(function () { App.aviso(''); iniciar(); }, function (e) { App.aviso(e.message, 'error'); b.disabled = false; }); };
@@ -23,7 +23,8 @@
   }
   function iniciar() {
     var u = API.usuario(); if (!u || !API.token()) return pantallaLogin();
-    $('#quien').textContent = u.nombre + ' · ' + u.rol; $('#user-av').textContent = String(u.nombre || '?').replace(/[^A-Za-zÁÉÍÓÚÑ ]/g, '').split(/\s+/).filter(Boolean).slice(0, 2).map(function (x) { return x.charAt(0).toUpperCase(); }).join('') || '?'; $('#salir').hidden = false;
+    $('#quien').textContent = u.nombre; $('#user-av').textContent = String(u.nombre || '?').replace(/[^A-Za-zÁÉÍÓÚÑ ]/g, '').split(/\s+/).filter(Boolean).slice(0, 2).map(function (x) { return x.charAt(0).toUpperCase(); }).join('') || '?'; $('#salir').hidden = false;
+    $('#user-rol').textContent = u.rol + ' · V19 · ' + App.build; if (window.Cabecera) Cabecera.mostrar();
     cerrarLogin(); U.vacio($('#vista')).appendChild(h('p', { class: 'empty-note' }, 'Cargando datos…'));
     Datos.cargar().then(function () { pintarMenu(); irA(location.hash.slice(1) || 'inicio'); }, function (e) { App.aviso(e.message, 'error'); });
   }
@@ -49,6 +50,31 @@
       } }, ic, x[2]));
     });
   }
+  /* Chips de periodo de V18_4 (Hoy · Ayer · Esta semana · Este mes · Mes anterior · Rango · Últimos 50) sobre los filtros de fecha propios de V19: rellenan Desde/Hasta y buscan. */
+  var CON_CHIPS = ['ventas', 'compras', 'conversiones', 'cotizaciones'];
+  function iso(d) { return d.getUTCFullYear() + '-' + ('0' + (d.getUTCMonth() + 1)).slice(-2) + '-' + ('0' + d.getUTCDate()).slice(-2); }
+  function rangoChip(k) {
+    var h0 = U.hoy(), d = new Date(h0 + 'T00:00:00Z'), y = d.getUTCFullYear(), m = d.getUTCMonth(), dow = (d.getUTCDay() + 6) % 7;
+    if (k === 'hoy') return [h0, h0];
+    if (k === 'ayer') { var a = new Date(d); a.setUTCDate(a.getUTCDate() - 1); return [iso(a), iso(a)]; }
+    if (k === 'semana') { var l = new Date(d); l.setUTCDate(l.getUTCDate() - dow); return [iso(l), h0]; }
+    if (k === 'mes') return [iso(new Date(Date.UTC(y, m, 1))), h0];
+    if (k === 'mesant') return [iso(new Date(Date.UTC(y, m - 1, 1))), iso(new Date(Date.UTC(y, m, 0)))];
+    return ['', ''];
+  }
+  function chipsFecha(cont, p) {
+    if (CON_CHIPS.indexOf(p.id) < 0) return; var panel = cont.querySelector('.filtros'); if (!panel) return;
+    var desde = panel.querySelector('[data-n="desde"]'), hasta = panel.querySelector('[data-n="hasta"]'), buscar = panel.querySelector('[data-accion="buscar"]'); if (!desde || !hasta || !buscar) return;
+    var DEF = (p.id === 'ventas' || p.id === 'compras') ? 'Últimos 50' : 'Todas', fila = h('div', { class: 'tabs-mini', 'data-chips': p.id });
+    function marcar(k) { [].slice.call(fila.querySelectorAll('button')).forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-chip') === k); }); }
+    [['hoy', 'Hoy'], ['ayer', 'Ayer'], ['semana', 'Esta semana'], ['mes', 'Este mes'], ['mesant', 'Mes anterior'], ['rango', 'Rango'], ['todo', DEF]].forEach(function (x) {
+      fila.appendChild(h('button', { type: 'button', class: 'tab-mini' + (x[0] === 'todo' ? ' active' : ''), 'data-chip': x[0], onclick: function () {
+        marcar(x[0]); if (x[0] === 'rango') { desde.focus(); return; }
+        var r = rangoChip(x[0]); desde.value = r[0]; hasta.value = r[1]; desde.dispatchEvent(new Event('input', { bubbles: true })); hasta.dispatchEvent(new Event('input', { bubbles: true })); buscar.click(); } }, x[1]));
+    });
+    [desde, hasta].forEach(function (i) { i.addEventListener('change', function () { marcar('rango'); }); });
+    cont.insertBefore(h('div', { class: 'filtro-fecha' }, fila), panel);
+  }
   function irA(id) {
     var rol = App.rol(), p = App.pantallas.filter(function (x) { return x.id === id && x.roles.indexOf(rol) >= 0; })[0] || App.pantallas.filter(function (x) { return x.roles.indexOf(rol) >= 0; })[0];
     if (!p) return; App.actual = p.id; location.hash = p.id;
@@ -56,8 +82,13 @@
     document.querySelectorAll('#navbaja .bn-item').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-baja') === p.id); b.classList.toggle('act', b.getAttribute('data-baja') === p.id); });
     document.querySelectorAll('#mas-menu .mas-item').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-pantalla') === p.id); }); $('#titulo-m').textContent = p.titulo;
     var cont = U.vacio($('#vista')); cont.setAttribute('data-vista', p.id);
-    if (p.id !== 'inicio') cont.appendChild(h('div', { class: 'topline' }, h('h2', {}, p.titulo), h('button', { type: 'button', class: 'btn-sm', 'data-accion': 'actualizar', title: 'Vuelve a leer los datos desde el servidor', onclick: function () { App.recargar(); } }, '↻ Actualizar')));
+    var grupo = h('span', { class: 'acc-grupo' }, h('button', { type: 'button', class: 'btn-sm', 'data-accion': 'actualizar', title: 'Vuelve a leer los datos desde el servidor', onclick: function () { App.recargar(); } }, '↻ Actualizar'));
+    if (p.id !== 'inicio') cont.appendChild(h('div', { class: 'topline' }, h('h2', {}, p.titulo), grupo));
     p.render(cont);
+    chipsFecha(cont, p);
+    var barra = cont.querySelector('.barra-acc');   // los botones principales (Nueva venta, Nuevo producto…) suben a la fila del título
+    if (barra && p.id !== 'inicio') { while (barra.firstChild) grupo.appendChild(barra.firstChild); barra.parentNode.removeChild(barra); }
+    if (cont.getAttribute('data-vista') !== p.id) console.error('V19: la vista no coincide con la pantalla pedida', p.id);
   }
   App.irA = irA; App.recargar = function () { irA(App.actual); };
   App.recargarDatos = function () { return Datos.cargar(); };
