@@ -10,21 +10,35 @@
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-<div id="app">
-  <aside id="lateral">
-    <div class="marca"><img src="img/logo-192.png" alt="iMotor Care" width="44" height="44"><div><strong>iMotor Care</strong><small>V19 <span class="etiqueta">PRUEBA</span></small></div></div>
-    <nav id="menu" hidden></nav>
-    <div class="usuario"><button id="quien" type="button" class="enlace" title="Cambiar mi clave"></button><button id="salir" type="button" hidden>Salir</button></div>
-  </aside>
-  <div id="principal">
-    <header class="barra-m"><img src="img/logo-192.png" alt="" width="30" height="30"><strong id="titulo-m">iMotor Care</strong><span class="etiqueta">PRUEBA</span></header>
-    <div id="aviso" class="aviso" hidden></div>
-    <main id="vista"></main>
+<div id="login-screen" hidden>
+  <div class="login-wrap">
+    <div class="login-unit">
+      <div class="login-head"><img class="login-brand-logo" src="img/logo-web.png" alt="iMotor Care"></div>
+      <div class="login-card" id="login-card"></div>
+    </div>
   </div>
-  <nav id="navbaja" hidden></nav>
 </div>
+<div id="app-screen" class="active">
+  <nav id="lateral" class="sidebar">
+    <div class="brand"><img class="sidebar-logo" src="img/logo-web.png" alt="iMotor Care"></div>
+    <div id="menu" hidden></div>
+    <div class="sidebar-foot">
+      <div class="user-chip"><div class="user-avatar" id="user-av"></div><div><button id="quien" type="button" class="user-name enlace" title="Cambiar mi clave"></button><div class="user-role"><span class="etiqueta">V19 · PRUEBA</span></div></div></div>
+      <button id="salir" type="button" class="logout-link" hidden>Cerrar sesión</button>
+    </div>
+  </nav>
+  <main id="principal" class="main">
+    <header class="barra-m"><img src="img/logo-192.png" alt="" width="28" height="28"><strong id="titulo-m">iMotor Care</strong><span class="etiqueta">PRUEBA</span></header>
+    <div id="aviso" class="aviso" hidden></div>
+    <section id="vista" class="view active"></section>
+  </main>
+</div>
+<nav id="navbaja" class="bottom-nav show" hidden></nav>
+<div id="mas-menu" class="mas-menu"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/config.js"></script>
+<script src="js/iconos.js"></script>
+<script src="js/temas.js"></script>
 <script src="js/api.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/form.js"></script>

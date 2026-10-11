@@ -13,7 +13,7 @@
       if (!Object.keys(campos).length) throw new Error('No hay cambios que guardar.'); var d = { llave: c.llave, campos: campos }; if (c.version) d.version = c.version; return K.escribir('sunat.guardar', d);
     }, { ancho: true, alTerminar: function () { U.toast('Datos SUNAT guardados.', 'ok'); alTerminar(); } });
   }
-  App.pantalla({ id: 'sunat', titulo: 'SUNAT', roles: ['A'], render: function (cont) {
+  App.pantalla({ id: 'sunat', titulo: 'Resumen SUNAT', roles: ['A'], render: function (cont) {
     var res = h('div', { 'data-lista': 'sunat-resumen' }), lista = h('div', { 'data-lista': 'sunat' });
     var fil = K.filtros([{ n: 'periodo', l: 'Periodo (AAAA-MM)', t: 'text', req: true, def: function () { return U.hoy().slice(0, 7); } }], {}, cargar); cont.appendChild(fil.el); cont.appendChild(res); cont.appendChild(lista);
     function cargar() {
