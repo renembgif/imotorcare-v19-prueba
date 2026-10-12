@@ -33,7 +33,7 @@
         { texto: 'Anular', id: 'anular-pago', onclick: function () { K.pedirMotivo('Anular pago ' + p.id).then(function (mot) { if (mot) K.escribir('pagos.anular', { id: p.id, version: p.version, motivo: mot }).then(function () { U.toast('Pago anulado.', 'ok'); cargar(); alTerminar(); }, U.error); }); } }]; }, 'Este compromiso no tiene pagos.')); }, U.error); }
     cargar();
   }
-  App.pantalla({ id: 'compromisos', titulo: 'Compromisos', roles: ['A'], render: function (cont) {
+  App.pantalla({ id: 'compromisos', titulo: 'Próximos pagos', roles: ['A'], render: function (cont) {
     var lista = h('div', { 'data-lista': 'compromisos' }), fil = K.filtros([{ n: 'q', l: 'Beneficiario u origen', t: 'text' }, { n: 'estado_pago', l: 'Estado', t: 'select', vacio: 'Todos', opciones: ['Pendiente', 'Parcial', 'Vencido', 'Pagado'] }, { n: 'tipo', l: 'Tipo', t: 'select', vacio: 'Todos', opciones: function () { return Datos.catalogo('tipo_compromiso'); } }], {}, cargar);
     cont.appendChild(h('div', { class: 'barra-acc' }, h('button', { class: 'primario', 'data-accion': 'nuevo-compromiso', type: 'button', onclick: function () { nuevo(cargar); } }, '➕ Nuevo compromiso'))); cont.appendChild(fil.el); cont.appendChild(lista);
     function cargar() { K.cargando(lista); K.leer('compromisos.listar', fil.valores()).then(function (r) {

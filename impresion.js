@@ -2,9 +2,19 @@
  * Solo muestra datos del cliente: nunca costos ni capas de inventario (regla 2.18 de FIFO). */
 var Impresion = (function () {
   'use strict';
+  /* Carga bajo demanda: jsPDF y las imágenes del PDF/sticker (~1 MB) ya no frenan el arranque de la Web; se descargan la primera vez que se crea un PDF o un sticker. */
+  function cargarScript_(src) { return new Promise(function (ok, no) { var el = document.createElement('script'); el.src = src; el.onload = ok; el.onerror = function () { no(new Error('No se pudo cargar ' + src.split('?')[0] + '. Revisa tu conexión a internet y vuelve a intentar.')); }; document.head.appendChild(el); }); }
+  async function asegurarLibs(conPDF) {
+    if (conPDF && !window.jspdf) await cargarScript_('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    if (typeof WEB_LOGO_B64 === 'undefined') await cargarScript_('js/activos_impresion.js?v=20261011b');
+  }
+  /* Nombre de archivo a prueba de codificación: si este archivo se leyó mal (UTF-8 leído como Latin-1: "CotizaciÃ³n"), se repara; y los nombres se escriben con \u para no depender de la codificación del servidor. */
+  function nombreSeguro(n) { n = String(n); try { if (/[\u00c2\u00c3][\u0080-\u00bf]/.test(n)) return decodeURIComponent(escape(n)); } catch (e) { /* ya estaba bien */ } return n; }
   async function compartirArchivo(blob, filename, mensaje, mime) {
+    filename = nombreSeguro(filename);
+    var nombreCompartir = filename.normalize('NFD').replace(/[\u0300-\u036f]/g, '');   // al COMPARTIR (WhatsApp) el nombre va sin tilde; al DESCARGAR conserva la tilde
     try {
-      const file = new File([blob], filename, { type: mime });
+      const file = new File([blob], nombreCompartir, { type: mime });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], text: mensaje });
         return;
@@ -44,7 +54,7 @@ var Impresion = (function () {
     const tableBottom = tableTop + tableHeadH + alturaFilas;
     const pageH = Math.max(842, tableBottom + totalsH + footerH + margin); // A4 vertical (595x842pt) por defecto
   
-    const doc = new jsPDF({ unit: 'pt', format: [pageW, pageH] });
+    const doc = new jsPDF({ unit: 'pt', format: [pageW, pageH], compress: true });
   
     // Franjas diagonales tipo isotipo, en la esquina del encabezado
     function chevron(x, y, w, h, skew, color) {
@@ -79,7 +89,7 @@ var Impresion = (function () {
     }
     // Insignias de redes/pago: PNG reales, limpios (fondo transparente, sin recortes ni bordes)
     function badgeImg(b64, x, y, s) {
-      try { doc.addImage('data:image/png;base64,' + b64, 'PNG', x, y, s, s); } catch (e) {}
+      try { doc.addImage('data:image/png;base64,' + b64, 'PNG', x, y, s, s, undefined, 'FAST'); } catch (e) {}
     }
     function badgeYape(x, y, w, h) { badgeImg(ICON_YAPE_B64, x, y, w, w); }
     function badgeTikTok(x, y, s) { badgeImg(ICON_TIKTOK_B64, x, y, s); }
@@ -90,7 +100,7 @@ var Impresion = (function () {
     // ---------- Encabezado (azul noche) ----------
     doc.setFillColor(...NAVY); doc.rect(0, 0, pageW, headerH, 'F');
   
-    try { doc.addImage('data:image/png;base64,' + WEB_LOGO_B64, 'PNG', 26, 26, 150, 84); } catch (e) {}
+    try { doc.addImage('data:image/png;base64,' + WEB_LOGO_B64, 'PNG', 26, 26, 150, 84, undefined, 'FAST'); } catch (e) {}
   
     doc.setDrawColor(...JADE); doc.setLineWidth(1); doc.line(pageW - 190, 24, pageW - 190, headerH - 21);
     doc.setTextColor(...JADE); doc.setFontSize(11); doc.setFont(undefined, 'bold');
@@ -163,10 +173,10 @@ var Impresion = (function () {
   
     // ---------- Pie: imagen única con el diseño final, pegada al fondo real de la hoja (bloques 5+6+7 = 69mm) ----------
     let fy = pageH - margin - footerImgH;
-    try { doc.addImage('data:image/png;base64,' + FOOTER_IMG_B64, 'PNG', margin, fy, footerImgW, footerImgH); } catch (e) {}
+    try { doc.addImage('data:image/png;base64,' + FOOTER_IMG_B64, 'PNG', margin, fy, footerImgW, footerImgH, undefined, 'FAST'); } catch (e) {}
   
     const numLimpio = String(numero).replace(/[^0-9]/g, '').padStart(4, '0');
-    return { blob: doc.output('blob'), filename: `Cotización_N. ${numLimpio}.pdf`, doc: doc };
+    return { blob: doc.output('blob'), filename: `Cotizaci\u00f3n_N. ${numLimpio}.pdf`, doc: doc };
   }
   function fechaCorta_(fecha){
     const d = new Date(fecha);
@@ -242,6 +252,7 @@ var Impresion = (function () {
     ctx.beginPath(); ctx.moveTo(cxCheck-9,cy); ctx.lineTo(cxCheck-2,cy+8); ctx.lineTo(cxCheck+10,cy-9); ctx.stroke();
   }
   async function construirCanvasSticker(s){
+    await asegurarLibs(false);
     const img = await cargarPlantillaSticker();
     const canvas = document.createElement('canvas');
     canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
@@ -275,7 +286,7 @@ var Impresion = (function () {
     var fechaStr = fechaDe_(c.fecha).toLocaleDateString('es-PE', { day: '2-digit', month: 'long', year: 'numeric' });
     return generarPDF(c.numero_formateado || c.numero, fechaStr, c.cliente || 'Cliente genérico', items, total, igv);
   }
-  function cotizacionPDF(c) { var r = construirPDFCotizacion(c); return compartirArchivo(r.blob, r.filename, MENSAJE_WHATSAPP_DEFAULT, 'application/pdf'); }
+  async function cotizacionPDF(c) { await asegurarLibs(true); var r = construirPDFCotizacion(c); return compartirArchivo(r.blob, r.filename, MENSAJE_WHATSAPP_DEFAULT, 'application/pdf'); }
   /* Servicio de V19 → datos del sticker de V18_4 (Km y próximo cambio solo dígitos, como en V18_4). */
   function servicioASticker(s) {
     return { fecha: s.fecha ? String(s.fecha).slice(0, 10) + 'T00:00:00' : '', aceite: s.aceite_utilizado, cantidad: s.cantidad_aceite, filtroAceite: s.filtro_aceite, filtroAire: s.filtro_aire,

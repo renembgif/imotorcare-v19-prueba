@@ -14,7 +14,7 @@
     F.dialogo('Ajustar stock de ' + p.codigo, [{ n: 'cantidad', l: 'Cantidad (+ entra, − sale)', t: 'number', req: true, paso: '0.001' }, { n: 'fecha', l: 'Fecha', t: 'date', req: true, def: U.hoy }, { n: 'motivo', l: 'Motivo', t: 'text', req: true }], {},
       function (v) { v.producto_codigo = p.codigo; return K.escribir('productos.ajustar_stock', v); }, { alTerminar: function () { U.toast('Stock ajustado.', 'ok'); App.recargarDatos().then(alTerminar); } });
   }
-  App.pantalla({ id: 'productos', titulo: 'Productos', roles: ['A', 'O'], render: function (cont) {
+  App.pantalla({ id: 'productos', titulo: 'Inventario', roles: ['A', 'O'], render: function (cont) {
     var lista = h('div', { 'data-lista': 'productos' }), fil = K.filtros([{ n: 'q', l: 'Código, nombre o ubicación', t: 'text' }, { n: 'tipo', l: 'Tipo', t: 'select', vacio: 'Todos', opciones: function () { return Datos.catalogo('tipo_producto'); } }, { n: 'stock_bajo', l: 'Solo stock bajo', t: 'check' }], {}, cargar), A = App.rol() === 'A';
     if (A) cont.appendChild(h('div', { class: 'barra-acc' }, h('button', { class: 'primario', 'data-accion': 'nuevo-producto', type: 'button', onclick: function () { dialogoProducto(null, cargar); } }, '➕ Nuevo producto'))); cont.appendChild(fil.el); cont.appendChild(lista);
     function cargar() { K.cargando(lista); var f = fil.valores(); if (!f.stock_bajo) delete f.stock_bajo; K.leer('productos.listar', f).then(function (r) { U.vacio(lista).appendChild(h('p', { class: 'suave' }, r.datos.productos.length + ' producto(s)'));
@@ -36,7 +36,7 @@
     cargar();
   } });
 
-  App.pantalla({ id: 'catalogos', titulo: 'Catálogos', roles: ['A'], render: function (cont) {
+  App.pantalla({ id: 'catalogos', grupo: 'Configuración', titulo: 'Catálogos', roles: ['A'], render: function (cont) {
     var lista = h('div', { 'data-lista': 'catalogos' });
     cont.appendChild(h('div', { class: 'barra-acc' }, h('button', { class: 'primario', 'data-accion': 'nuevo-valor', type: 'button', onclick: function () {
       var nombres = Array.from(new Set(Datos.catalogos.map(function (c) { return c.catalogo; })));
